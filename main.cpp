@@ -4,8 +4,6 @@
 #include "buffer.h"
 #include "list.h"
 
-#include <iostream>
-
 #define DLLEXPORT extern "C" __declspec(dllexport)
 
 CList buffers;

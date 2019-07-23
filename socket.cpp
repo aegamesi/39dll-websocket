@@ -51,12 +51,13 @@ bool CSocket::tcpconnect(char *address, int port, int mode)
 		while (readheader) {
 			double len = receivemessage(0, &buf);
 			char* m = buf.readsep("\r\n");
-			std::cout << "|| " << m << std::endl;
+			// std::cout << "|| " << m << std::endl;
 
 			if (strcmp(m, "") == 0) {
 				readheader = FALSE;
 			}
 		}
+		// TODO verify key
 		SetFormat(3, NULL); // set websocket mode
 		setsync(1);
 		// ok
