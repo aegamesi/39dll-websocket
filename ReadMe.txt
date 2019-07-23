@@ -11,3 +11,8 @@ If you do not have Code::Blocks than download it for free at http://www.codebloc
 
 //How to compile without code::blocks (untested)
 Compile all the .cpp files and link with iphlpapi.lib, wininet.lib, wsock32.lib
+
+$CXX -shared *.cpp -lwsock32 -lwininet -liphlpapi -o 39dll.dll
+
+
+$CXX -shared *.cpp -static -static-libgcc -static-libstdc++ -lwsock32 -lwininet -liphlpapi -o 39dll.dll

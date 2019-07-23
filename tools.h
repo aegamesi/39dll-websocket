@@ -1,8 +1,8 @@
 #pragma once
 #include "includes.h"
 #include "buffer.h"
-#include <Iphlpapi.h>
-#include <Wininet.h>
+#include <iphlpapi.h>
+#include <wininet.h>
 void CalculateMD5(char *, int, char *);
 class CTools
 {

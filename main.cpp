@@ -4,6 +4,8 @@
 #include "buffer.h"
 #include "list.h"
 
+#include <iostream>
+
 #define DLLEXPORT extern "C" __declspec(dllexport)
 
 CList buffers;
@@ -15,6 +17,8 @@ int AddFile(HANDLE);
 //Sockets
 DLLEXPORT double tcpconnect(char*ip, double port, double mode)
 {
+	std::cout << "abc!!!!!!!\n";
+
 	CSocket* sock = new CSocket();
 	if(sock->tcpconnect(ip, (int)port, (int)mode))
 		return AddSocket(sock);
