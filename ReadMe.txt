@@ -1,3 +1,5 @@
+License for modifications: GNU GPLv3
+
 Source code for 39dll.
 main.cpp only contains code to port the functions/classes to game maker.
 the classes can also be used within ur c++ projects.
