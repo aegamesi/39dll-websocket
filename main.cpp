@@ -17,8 +17,6 @@ int AddFile(HANDLE);
 //Sockets
 DLLEXPORT double tcpconnect(char*ip, double port, double mode)
 {
-	std::cout << "abc!!!!!!!\n";
-
 	CSocket* sock = new CSocket();
 	if(sock->tcpconnect(ip, (int)port, (int)mode))
 		return AddSocket(sock);
@@ -563,3 +561,50 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
+int main() {
+	// websocket test
+	dllInit();
+	std::cout << "connecting..." << std::endl;
+	double sock = tcpconnect("localhost", 80, 1); // non- blocking
+	// double sock = tcpconnect("aegamesi.com", 80, 1); // non- blocking
+	std::cout << "connected. sock: " << sock << ". status: " << tcpconnected(sock) << std::endl;
+	setformat(sock, 1, "\r\n");
+	setsync(sock, 0); // blocking
+	setnagle(sock, 1); // no delay
+
+	clearbuffer(0);
+	writechars("GET / HTTP/1.1\r\n", 0);
+	writechars("Host: localhost\r\n", 0);
+	writechars("Update: websocket\r\n", 0);
+	writechars("Connection: Upgrade\r\n", 0);
+	writechars("Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n", 0);
+	// writechars("Sec-WebSocket-Protocol: chat, superchat\r\n", 0);
+	writechars("Sec-WebSocket-Version: 13\r\n", 0);
+	sendmessage(sock, "", 0, 0);
+
+	bool readheader = TRUE;
+	clearbuffer(0);
+	while (readheader) {
+		receivemessage(sock, 0, 0);
+		char* m = readsep("\r\n", 0);
+		std::cout << "|| " << m << std::endl;
+
+		if (strcmp(m, "") == 0) {
+			readheader = FALSE;
+		}
+	}
+	setformat(sock, 2, NULL); // back to raw
+
+	// write first message
+	clearbuffer(0);
+	writebyte((8 << 4) | (0x01), 0); // opcode: utf-8 text
+	writebyte((1 << 7) | (11), 0);// masked: yes. length: 11
+	writebyte(0, 0); // mask key
+	writebyte(0, 0); // mask key
+	writebyte(0, 0); // mask key
+	writebyte(0, 0); // mask key
+	writechars("hello world", 0);
+	sendmessage(sock, "", 0, 0);
+
+	return 0;
+}
