@@ -86,14 +86,19 @@ DLLEXPORT double receivemessage(double sockid, double len, double buffid)
 {
 	CSocket*sock = (CSocket*)sockets.item((int)sockid);
 	CBuffer*buff = (CBuffer*)buffers.item((int)buffid);
-	if(sock == NULL)return -1;
-	if(buff == NULL)return -2;
+	if(sock == NULL)return -101;
+	if(buff == NULL)return -102;
 	int size = sock->receivemessage((int)len, buff);
 	if(size < 0)
 	{
 		int error = sock->lasterror();
-		if(error == 10054)return 0;
+		if(error == 10035) return 0;
+		printf("socket error: %d\n", error);
 		return -error;
+	}
+	if (size == 0) {
+		printf("socket closed gracefully\n");
+		return -200;
 	}
 	return size;
 }

@@ -247,6 +247,7 @@ int CSocket::sendmessage(char *ip, int port, CBuffer *source)
 			sendbuff.writebyte(0);
 			sendbuff.addBuffer(source);
 			size = send(sockid, sendbuff.data, sendbuff.count, 0);
+			// printf("-- sent size: %d... id: %d\n", source->count, (int) source->data[0]);
 		}
 	}
 	if(size == SOCKET_ERROR)return -WSAGetLastError();
@@ -305,7 +306,6 @@ int CSocket::receivemessage(int len, CBuffer*destination)
 			bool flag_fin = headerbuff[0] & 0x80 > 0;
 			int opcode = headerbuff[0] & 0xF;
 			int len = headerbuff[1] & 0x7F;
-			// TODO handle different opcodes
 
 			if (len == 126) {
 				if(recv(sockid, headerbuff, 2, 0) == SOCKET_ERROR) return -1;
@@ -314,6 +314,18 @@ int CSocket::receivemessage(int len, CBuffer*destination)
 
 			buff = new char[len];
 			size = recv(sockid, buff, len, 0);
+			// printf("-- received size: %d... id: %d\n", len, buff[0]);
+
+			// TODO handle different opcodes
+			if (opcode == 0x2) {
+				// binary data
+			} else if (opcode == 0x8) {
+				// close connection
+				size = -123;
+			} else {
+				printf("!!!!! got msg with opcode %d, len %d.\n", opcode, len);
+				size = 0;
+			}
 		}
 	}
 	if(size > 0)
