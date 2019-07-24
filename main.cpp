@@ -559,7 +559,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
-int main() {
+/*int main() {
 	// websocket test
 	dllInit();
 	std::cout << "connecting..." << std::endl;
@@ -584,4 +584,4 @@ int main() {
 	std::cout << m << std::endl;
 
 	return 0;
-}
+}*/

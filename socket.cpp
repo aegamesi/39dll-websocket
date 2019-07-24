@@ -5,11 +5,22 @@ int SenderAddrSize = sizeof(SOCKADDR_IN);
 SOCKADDR_IN CSocket::SenderAddr;
 bool CSocket::tcpconnect(char *address, int port, int mode)
 {
+	// for form of abcdef/def, split into host and path
+	char host[101] = {0};
+	char* path = strchr(address, '/');
+	if (path == NULL) {
+		strncpy(host, address, 100);
+	} else {
+		int hostlen = path - address;
+		strncpy(host, address, hostlen);
+	}
+	// printf("addr %s. host %s. path %s. port %d\n", address, host, path, port);
+
 	SOCKADDR_IN addr;
 	LPHOSTENT  hostEntry;
 	if((sockid = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)) == SOCKET_ERROR)
         return false;
-	if((hostEntry = gethostbyname(address))==NULL)
+	if((hostEntry = gethostbyname(host))==NULL)
 	{
 		closesocket(sockid);
 		return false;
@@ -37,12 +48,24 @@ bool CSocket::tcpconnect(char *address, int port, int mode)
 		// send request header
 		CBuffer buf;
 		buf.clear();
-		buf.writechars("GET /echo HTTP/1.1\r\n");
-		buf.writechars("Host: localhost\r\n");
+		buf.writechars("GET ");
+		if (path == NULL) {
+			buf.writechars("/");
+		} else {
+			buf.writechars(path);
+		}
+		buf.writechars(" HTTP/1.1\r\n");
+		buf.writechars("Host: ");
+		buf.writechars(host);
+		buf.writechars("\r\n");
 		buf.writechars("Upgrade: websocket\r\n");
 		buf.writechars("Connection: Upgrade\r\n");
 		buf.writechars("Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n");
 		buf.writechars("Sec-WebSocket-Version: 13\r\n");
+
+		//printf("%s\n", buf.readchars(buf.count));
+		// buf.StreamSet(0);
+
 		sendmessage(NULL, 0, &buf);
 
 		// read response header
@@ -51,6 +74,16 @@ bool CSocket::tcpconnect(char *address, int port, int mode)
 		while (readheader) {
 			double len = receivemessage(0, &buf);
 			char* m = buf.readsep("\r\n");
+			// HTTP/1.1 101 Switching Protocols
+
+			if (strlen(m) >= 12 && memcmp(m, "HTTP/1.1", 8) == 0) {
+				char statuscode[4];
+				memcpy(statuscode, (m + 9), 3);
+				printf("connect response code: %s\n", statuscode);
+				if (strcmp(statuscode, "101") != 0) {
+					return false;
+				}
+			}
 			// std::cout << "|| " << m << std::endl;
 
 			if (strcmp(m, "") == 0) {
@@ -204,7 +237,8 @@ int CSocket::sendmessage(char *ip, int port, CBuffer *source)
 				sendbuff.writebyte((1 << 7) | (source->count)); // masked: yes. length (7 bits)
 			} else {
 				sendbuff.writebyte((1 << 7) | 126); // masked: yes. length (16 bits)
-				sendbuff.writeushort(source->count);
+				sendbuff.writebyte((source->count >> 8) & 0xFF);
+				sendbuff.writebyte((source->count) & 0xFF);
 			}
 			// TODO actually mask
 			sendbuff.writebyte(0);
